@@ -1,6 +1,12 @@
 #pragma once
+#pragma warning(disable : 4996)
 #include <iostream>
-enum  class Status { enrolled, dropout, graduated };
+#include <fstream>
+using namespace std;
+enum Status
+{
+	enrolled, dropout, graduated
+};
 class Student
 {
 private:
@@ -14,13 +20,14 @@ private:
 
 	void CopyFrom(const Student& other);
 	void Free();
-
 public:
 
-	Student(const char* name, unsigned int CurrentCourse, const  char* major, unsigned int group, Status status, double AverageGrade);
+	Student(const char* name, unsigned int FacultyNumber, unsigned int CurrentCourse, const  char* major, unsigned int group, Status status, double AverageGrade);
 	Student(const Student& other);
 	Student& operator=(const Student& other);
 	~Student();
+
+	void Print(ostream& strm);
 };
 //////<BigFour>
 void Student::CopyFrom(const Student& other)
@@ -33,9 +40,10 @@ void Student::Free()
 {
 	delete[] name;
 }
-Student::Student(const char* name, unsigned int CurrentCourse, const  char* major, unsigned int group, Status status, double AverageGrade)
+Student::Student(const char* name,unsigned int FacultyNumber, unsigned int CurrentCourse, const  char* major, unsigned int group, Status status, double AverageGrade)
 {
 	this->name = new char[strlen(name) + 1];
+	this->FacultyNumber = FacultyNumber;
 	this->CurrentCourse = CurrentCourse;
 	strcpy(this->major, major);
 	this->group = group;
@@ -61,3 +69,4 @@ Student::~Student()
 	Free();
 }
 //////</BigFour>
+
