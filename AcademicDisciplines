@@ -1,0 +1,20 @@
+#pragma once
+#pragma warning(disable : 4996)
+#include "Student.h"
+enum Type
+{
+	mandatory, optional
+};
+class AcademicDiscipline
+{
+private:
+	char* name;
+	Type type;
+	void CopyFrom(const AcademicDiscipline& other);
+	void Free();
+public:
+	AcademicDiscipline(char* name, Type type);
+	AcademicDiscipline(const AcademicDiscipline& other);
+	AcademicDiscipline& operator=(const AcademicDiscipline& other);
+	~AcademicDiscipline();
+};
