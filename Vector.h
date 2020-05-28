@@ -126,10 +126,10 @@ template <typename T>
 void Vector<T>::PushBack(const T& el)
 {
 	if (this->capacity == this->CurrentSize) {
-		resize();
+		Resize();
 	}
 
-	this->storage[current_size] = el;
+	this->storage[CurrentSize] = el;
 	CurrentSize++;
 }
 template <typename T>
