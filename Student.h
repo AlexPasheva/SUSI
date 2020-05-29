@@ -1,81 +1,70 @@
 #pragma once
+
 #pragma warning(disable : 4996)
 #include <iostream>
 #include <fstream>
-#include "AcademicDisciplines.h"
+#include "Major.h"
 using namespace std;
-enum Status
-{
-	enrolled, dropout, graduated
-};
-enum Major
-{
-	ComputerScience, Informatics, InforamtionSystems, AppliedMathematics
-};
+
 class Student
 {
 private:
 	char* name;
 	unsigned int FacultyNumber;
-	unsigned int SemesterCourse;
-	Major major;
+	unsigned int year;
+	MajorName majorName;
+	Major* major;
 	unsigned int group;
 	Status status;
 	double AverageGrade;
+	Vector<Discipline*> disciplines;
+	Vector<double> grades;
 
 	void CopyFrom(const Student& other);
 	void Free();
 public:
 
-	Student(const char* name, unsigned int FacultyNumber, unsigned int SemesterCourse, Major major, unsigned int group, Status status, double AverageGrade);
+	Student(const char* name = "NoName", unsigned int FacultyNumber = 1000, unsigned int year = 0, Major* major = new Major(), MajorName majorMame = ComputerScience, unsigned int group = 0, Status status = Status::enrolled, double AverageGrade = 0);
 	Student(const Student& other);
 	Student& operator=(const Student& other);
 	~Student();
 
 	char* GetName();
 	unsigned int GetFacultyNumber();
-	unsigned int GetSemesterCourse();
-	Major GetMajor();
+	unsigned int GetYear();
+	//Major GetMajorName();
 	unsigned int GetGroup();
 	Status GetStatus();
 	double GetAverageGrade();
+	Student& GetStudentByFN(unsigned int fn);
 
 	void SetName(char* name);
-	void SetCurrentCourse(unsigned int CurrentCourse);
-	void SetMajor(Major major);
+	void SetYear(unsigned int year);
+	void SetMajorName(MajorName majorName);
 	void SetGroup(unsigned int group);
 	void SetStatus(Status status);
 	void SetAverageGrade(double AverageGrade);
+
+
 	void Print();
 };
 
+Student::Student(const char* name, unsigned int FacultyNumber, unsigned int year, Major* major, MajorName majorMame, unsigned int group, Status status, double AverageGrade)
+{
+
+}
 
 void Student::CopyFrom(const Student& other)
 {
 	name = new char[strlen(other.name) + 1];
 	strcpy(name, other.name);
-	this->major= other.major;
+	this->majorName = other.majorName;
 }
 void Student::Free()
 {
 	delete[] name;
 }
 
-Student::Student(const char* name, unsigned int FacultyNumber, unsigned int SemesterCourse, Major major, unsigned int group, Status status, double AverageGrade)
-{
-	this->name = new char[strlen(name) + 1];
-	strcpy(this->name, name);
-	this->FacultyNumber = FacultyNumber;
-	if (SemesterCourse > 0 && SemesterCourse < 5)
-	{
-		this->SemesterCourse = SemesterCourse;
-	}
-
-	this->major = major;
-	this->group = group;
-	this->status = status;
-	this->AverageGrade = AverageGrade;
-}
 Student::Student(const Student& other)
 {
 	CopyFrom(other);
@@ -94,6 +83,7 @@ Student::~Student()
 	Free();
 }
 
+
 char* Student::GetName()
 {
 	return name;
@@ -102,14 +92,11 @@ unsigned int Student::GetFacultyNumber()
 {
 	return FacultyNumber;
 }
-unsigned int Student::GetSemesterCourse()
+unsigned int Student::GetYear()
 {
-	return SemesterCourse;
+	return year;
 }
-Major Student::GetMajor()
-{
-	return major;
-}
+
 unsigned int Student::GetGroup()
 {
 	return group;
@@ -122,22 +109,29 @@ double Student::GetAverageGrade()
 {
 	return AverageGrade;
 }
+Student& Student::GetStudentByFN(unsigned int fn)
+{
+	if (fn == FacultyNumber)
+	{
+		return *this;
+	}
+}
 
 void Student::SetName(char* name)
 {
 	this->name = new char[strlen(name) + 1];
 	strcpy(this->name, name);
 }
-void Student::SetCurrentCourse(unsigned int SemesterCourse)
+void Student::SetYear(unsigned int year)
 {
-	if (SemesterCourse > 0 && SemesterCourse < 5)
+	if (year > 0 && year < 5)
 	{
-		this->SemesterCourse = SemesterCourse;
+		this->year = year;
 	}
 }
-void Student::SetMajor(Major major)
+void Student::SetMajorName(MajorName majorName)
 {
-	this->major= major;
+	this->majorName = majorName;
 }
 void Student::SetGroup(unsigned int group)
 {
@@ -155,27 +149,27 @@ void Student::Print()
 {
 	cout << "name: " << name << endl;
 	cout << "faulty number: " << FacultyNumber << endl;
-	cout << "semester course: " << SemesterCourse << endl;
+	cout << "semester course: " << year << endl;
 	cout << "major: ";
-	if (major==Major::AppliedMathematics)
+	if (majorName == AppliedMathematics)
 	{
 		cout << "Applied Mathematics";
 	}
-	else if(major==Major::ComputerScience)
+	else if (majorName == MajorName::ComputerScience)
 	{
 		cout << "Computer Science";
 	}
-	else if (major == Major::Informatics)
+	else if (majorName == MajorName::Informatics)
 	{
 		cout << "Informatics";
 	}
-	else if (major == Major::InforamtionSystems)
+	else if (majorName == MajorName::InforamtionSystems)
 	{
 		cout << "Inforamtion Systems";
 	}
 	cout << endl;
 	cout << "group: " << group << endl;
-	cout << "status: " << status << endl;
+	cout << "status: ";//<< status << endl;
 	cout << "average grade: " << AverageGrade;
 
 }
