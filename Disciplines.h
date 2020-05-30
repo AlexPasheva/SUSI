@@ -1,4 +1,6 @@
 #pragma once
+using namespace std;
+#include <fstream>
 #include "Enums.h"
 class Discipline
 {
@@ -8,7 +10,8 @@ private:
 	void CopyFrom(const Discipline& other);
 	void Free();
 public:
-	Discipline(const char* name = "NoName", unsigned int year = 0);
+	Discipline(const char* name = "NoName", Type type=Type::optional);
+	Discipline(char* name, Type type);
 	Discipline(const Discipline& other);
 	Discipline& operator=(const Discipline& other);
 	~Discipline();
@@ -20,6 +23,7 @@ public:
 
 	void Print();
 	bool operator==(const Discipline& other);
+	void Write(ofstream& file);
 };
 void Discipline::CopyFrom(const Discipline& other)
 {
@@ -30,7 +34,7 @@ void Discipline::Free()
 {
 	delete[] name;
 }
-Discipline::Discipline(const char* name, unsigned int year = 0)
+Discipline::Discipline(const char* name, Type type = Type::optional)
 {
 	this->name = new char[strlen(name) + 1];
 	strcpy(this->name, name);
@@ -89,4 +93,27 @@ bool Discipline::operator==(const Discipline& other)
 		return true;
 	}
 	return false;
+}
+void Discipline::Write(ofstream& file)
+{
+	int strLen = strlen(name);
+	file.write((const char*)&strLen, sizeof(int));
+	file.write(name, strLen);
+	file.write((const char*)&type, sizeof(Type)); //sizeof(int) is 4
+}
+Discipline Read(ifstream& file)
+{
+	int nameLen;
+	file.read((char*)&nameLen, sizeof(int));
+
+	char* name = new char[nameLen + 1];
+	file.read(name, nameLen);
+	name[nameLen] = '\0';
+
+	Type type;
+	file.read((char*)&type, sizeof(Type));
+
+	Discipline newDis(name, type);
+	return newDis;
+	delete[] name;
 }
