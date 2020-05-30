@@ -1,89 +1,119 @@
 #pragma once
-#include "Vector.h"
-#include "Discipline.h"
-class Major
+using namespace std;
+#include <fstream>
+#include "Enums.h"
+class Discipline
 {
-	MajorName name;
-	unsigned int years[4];
-	Vector<Discipline*> disciplines[4];
+private:
+	char* name;
+	Type type;
+	void CopyFrom(const Discipline& other);
+	void Free();
 public:
-	Major();
-	Major(MajorName name, Vector<Discipline*> year1, Vector<Discipline*> year2, Vector<Discipline*> year3, Vector<Discipline*> year4);
-	MajorName GetMajorName();
-	bool SearchDisciplineByYearAndName(unsigned int year, char* name);
-	Discipline* GetDisciplineByYearAndName(unsigned int year, char* name);
-	Vector<Discipline*> GetDisciplinesVector(unsigned int year);
+	Discipline(const char* name = "NoName", Type type=Type::optional);
+	Discipline(char* name, Type type);
+	Discipline(const Discipline& other);
+	Discipline& operator=(const Discipline& other);
+	~Discipline();
+
+	char* GetName();
+	Type GetType();
+	void SetName(char* name);
+	void SetType(Type type);
+
+	void Print();
+	bool operator==(const Discipline& other);
+	void Write(ofstream& file);
 };
-
-Major::Major()
+void Discipline::CopyFrom(const Discipline& other)
 {
-	name = ComputerScience;
-	years[0] = 0;
-	years[1] = 0;
-	years[2] = 0;
-	years[3] = 0;
-	disciplines[0] = Vector<Discipline*>();
-	disciplines[1] = Vector<Discipline*>();
-	disciplines[2] = Vector<Discipline*>();
-	disciplines[3] = Vector<Discipline*>();
+	name = new char[strlen(other.name) + 1];
+	strcpy(name, other.name);
 }
-
-Major::Major(MajorName name, Vector<Discipline*> year1, Vector<Discipline*> year2, Vector<Discipline*> year3, Vector<Discipline*> year4)
+void Discipline::Free()
 {
-	this->name = name;
-	for (int i = 1; i < 5; i++)
+	delete[] name;
+}
+Discipline::Discipline(const char* name, Type type = Type::optional)
+{
+	this->name = new char[strlen(name) + 1];
+	strcpy(this->name, name);
+	this->type = type;
+}
+Discipline::Discipline(const Discipline& other)
+{
+	CopyFrom(other);
+}
+Discipline& Discipline::operator=(const Discipline& other)
+{
+	if (this != &other)
 	{
-		years[i - 1] = i;
+		Free();
+		CopyFrom(other);
 	}
-	disciplines[0] = year1;
-	disciplines[1] = year2;
-	disciplines[2] = year3;
-	disciplines[3] = year4;
+	return *this;
 }
-MajorName Major::GetMajorName()
+Discipline::~Discipline()
+{
+	Free();
+}
+char* Discipline::GetName()
 {
 	return name;
 }
-bool Major::SearchDisciplineByYearAndName(unsigned int year, char* name)
+Type Discipline::GetType()
 {
-	if (year > 4)
+	return type;
+}
+void Discipline::SetName(char* name)
+{
+	this->name = new char[strlen(name) + 1];
+	strcpy(this->name, name);
+}
+void Discipline::SetType(Type type)
+{
+	this->type = type;
+}
+void Discipline::Print()
+{
+	cout << "name: " << name << "type: ";
+	if (type==Type::mandatory)
 	{
-		throw "Invalid year!";
+		cout << "mandatory ";
 	}
-	for (int i = 0; i < disciplines[year - 1].Size(); i++)
+	else
 	{
-		if (strcmp(disciplines[year - 1][i]->GetName(), name) == 0)
-		{
-			return true;
-		}
+		cout << "optional ";
+	}
+}
+bool Discipline::operator==(const Discipline& other)
+{
+	if (strcmp(this->name,other.name)==0)
+	{
+		return true;
 	}
 	return false;
 }
-Discipline* Major::GetDisciplineByYearAndName(unsigned int year, char* name)
+void Discipline::Write(ofstream& file)
 {
-	if (year > 4)
-	{
-		throw "Invalid year!";
-	}
-	for (int i = 0; i < disciplines[year - 1].Size(); i++)
-	{
-		if (strcmp(disciplines[year - 1][i]->GetName(), name) == 0)
-		{
-			return disciplines[year-1][i];
-		}
-	}
-	throw "There is no discipline with that name in that year!";
+	int strLen = strlen(name);
+	file.write((const char*)&strLen, sizeof(int));
+	file.write(name, strLen);
+	file.write((const char*)&type, sizeof(Type)); //sizeof(int) is 4
 }
-Vector<Discipline*> Major::GetDisciplinesVector(unsigned int year)
+Discipline Read(ifstream& file)
 {
-	//Vector<Discipline*> d;
-	////trqbva da se dobavq samo ako e mendatory
-	//for (int i = 0; i < disciplines[year-1].Size(); i++)
-	//{
-	//	if (disciplines[year - 1][i]->GetType()==Type::mandatory)
-	//	{
-	//		d.PushBack(disciplines[year - 1][i]);
-	//	}
-	//}
-	return disciplines[year-1];
+	int nameLen;
+	file.read((char*)&nameLen, sizeof(int));
+
+	char* name = new char[nameLen + 1];
+	file.read(name, nameLen);
+	name[nameLen] = '\0';
+
+	Type type;
+	file.read((char*)&type, sizeof(Type));
+
+	Discipline newDis(name, type);
+	return newDis;
+	delete[] name;
 }
