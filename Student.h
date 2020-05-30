@@ -32,7 +32,7 @@ public:
 	char* GetName();
 	unsigned int GetFacultyNumber();
 	unsigned int GetYear();
-	//Major GetMajorName();
+	MajorName GetMajorName();
 	unsigned int GetGroup();
 	Status GetStatus();
 	double GetAverageGrade();
@@ -43,15 +43,43 @@ public:
 	void SetMajorName(MajorName majorName);
 	void SetGroup(unsigned int group);
 	void SetStatus(Status status);
-	void SetAverageGrade(double AverageGrade);
-
+	//void SetAverageGrade(double AverageGrade);
 
 	void Print();
+	void Enroll(char* NameOfDiscipline);
+	void Advance();
+	void Report();
+	void Graduate();
+	void Interrupt();
+	void Resume();
+	void AddGrade(char* DisciplineName, double grade);
+	void ChangeProgram(Major* major);
+	void ChandeGroup(unsigned int group);
+	void ChangeYear(unsigned int year);
 };
 
-Student::Student(const char* name, unsigned int FacultyNumber, unsigned int year, Major* major, MajorName majorMame, unsigned int group, Status status, double AverageGrade)
+Student::Student(const char* name, unsigned int FacultyNumber, unsigned int year, Major* major, MajorName majorName, unsigned int group, Status status, double AverageGrade)
 {
-
+	this->name = new char[strlen(name) + 1];
+	strcpy(this->name, name);
+	this->FacultyNumber = FacultyNumber;
+	this->year = year;
+	this->major = major;
+	this->majorName = majorName;
+	this->group = group;
+	this->status = status;
+	this->AverageGrade = AverageGrade;
+	for (int i = 0; i < major->GetDisciplinesVector(year-1).Size(); i++)
+	{
+		if (major->GetDisciplinesVector(year-1)[i]->GetType()==Type::mandatory)
+		{
+			grades.PushBack(1);// enrolled in discipline by defalt
+		}
+		else
+		{
+			grades.PushBack(0);// 0 means not enrolled if student is enrolled its gonna turn into 1
+		}
+	}
 }
 
 void Student::CopyFrom(const Student& other)
@@ -96,7 +124,10 @@ unsigned int Student::GetYear()
 {
 	return year;
 }
-
+MajorName Student::GetMajorName()
+{
+	return majorName;
+}
 unsigned int Student::GetGroup()
 {
 	return group;
@@ -141,10 +172,7 @@ void Student::SetStatus(Status status)
 {
 	this->status = status;
 }
-void Student::SetAverageGrade(double AverageGrade)
-{
-	this->AverageGrade = AverageGrade;
-}
+
 void Student::Print()
 {
 	cout << "name: " << name << endl;
@@ -170,6 +198,219 @@ void Student::Print()
 	cout << endl;
 	cout << "group: " << group << endl;
 	cout << "status: ";//<< status << endl;
-	cout << "average grade: " << AverageGrade;
+		cout << "average grade: " << AverageGrade << endl;
+	for (int i = 0; i < disciplines.Size(); i++)
+	{
+		disciplines[i]->Print();
+		cout << "grade: " << grades[i];
+	}
 
+}
+void Student::Enroll(char* NameOfDiscipline)
+{
+	if (this->status==Status::dropout||this->status==Status::graduated)
+	{
+		throw "This student is graduated or droppout!";
+	}
+	if (major->SearchDisciplineByYearAndName(year,NameOfDiscipline))
+	{
+		disciplines.PushBack(major->GetDisciplineByYearAndName(year, name));
+		grades.PushBack(1);
+	}
+	else
+	{
+		throw "Student can't be enrolled in that discipline";
+	}
+}
+void Student::Advance()
+{
+	for (int i = 0; i < major->GetDisciplinesVector(year + 1).Size(); i++)
+	{
+		disciplines.PushBack(major->GetDisciplinesVector(year + 1)[i]);
+	}
+	++this->year;
+}
+void Student::Report()
+{
+	for (int i = 0; i < disciplines.Size(); i++)
+	{
+		if (grades[i]>1)
+		{
+			disciplines[i]->Print();
+			cout << "grade: " << grades[i];
+		}
+	}
+	for (int i = 0; i < disciplines.Size(); i++)
+	{
+		if (grades[i] == 1)
+		{
+			disciplines[i]->Print();
+			cout << "grade: " << grades[i]+1;
+		}
+	}
+}
+void Student::Graduate()
+{
+	if (this->status == Status::dropout || this->status == Status::graduated)
+	{
+		throw "This student is graduated or droppout!";
+	}
+	for (int i = 0; i < grades.Size(); i++)
+	{
+		if (grades[i]==1||grades[i]<3)
+		{
+			throw "This student can not be checked as graduated!";
+		}
+	}
+	this->status = Status::graduated;
+	this->group = 0;
+	this->year = 0;
+}
+void Student::Interrupt()
+{
+	if (this->status == Status::graduated)
+	{
+		throw "This student has graduated.";
+	}
+	this->status = Status::dropout;
+}
+void Student::Resume()
+{
+	if (this->status==Status::enrolled)
+	{
+		throw "This student is already enrolled.";
+	}
+	if (this->status == Status::graduated)
+	{
+		throw "This student has graduated.";
+	}
+	this->status = Status::enrolled;
+}
+void Student::AddGrade(char* DisciplineName,double grade)
+{
+	if (status==Status::dropout|| status == Status::graduated)
+	{
+		throw "This student is graduated or droppout!";
+	}
+	for (int i = 0; i < disciplines.Size(); i++)
+	{
+		if (strcmp(disciplines[i]->GetName(),name)==0 && disciplines[i]==0)
+		{
+			throw "This student hasn't been enrolled in that discipline!";
+		}
+		else if (strcmp(disciplines[i]->GetName(), name) == 1 || strcmp(disciplines[i]->GetName(), name) == -1)
+		{
+			throw "There is no discipline with that name!";
+		}
+		else
+		{
+			grades[i] = grade;
+		}
+	}
+}
+void Student::ChangeProgram(Major* major)
+{
+	if (this->status == Status::dropout || this->status == Status::graduated)
+	{
+		throw "This student is graduated or droppout!";
+	}
+	bool flag = 0;
+	int counter = 0;
+	int counter2 = 0;
+	for (int i = 0; i < year; i++)
+	{
+		for (int j = 0; j < major->GetDisciplinesVector(i).Size(); j++)
+		{
+			if (major->GetDisciplinesVector(i)[j]->GetType == Type::mandatory)
+			{
+				counter++;
+			}
+		}
+	}
+	for (int i = 0; i < year; i++)
+	{
+		for (int j = 0; j < major->GetDisciplinesVector(i).Size(); j++)
+		{
+			if (major->GetDisciplinesVector(i)[j]->GetType==Type::mandatory)
+			{
+				for (int k = 0; k < disciplines.Size(); k++)
+				{
+					if (disciplines[k] == major->GetDisciplinesVector(i)[j])// counterite proverqvat dali vsichki zadaljitelni izpiti prisastvat i v dvata majora
+					{
+						counter2++;
+					}
+				}
+			}
+		}
+	}
+	if (counter!=counter2)
+	{
+		throw "Тhe action cannot be performed.";
+	}
+	for (int i = 0; i < year; i++)
+	{
+		for (int j = 0; j < major->GetDisciplinesVector(i).Size(); j++)
+		{
+			if (major->GetDisciplinesVector(i)[j]->GetType == Type::mandatory)
+			{
+				for (int k = 0; k < disciplines.Size(); k++)
+				{
+					if (disciplines[k] == major->GetDisciplinesVector(i)[j] && grades[k] < 3)// proverqva dali vsichki zaduljitelni izpiti sa vzeti
+					{
+						throw "Тhe action cannot be performed.";
+					}
+				}
+			}
+		}
+	}
+	for (int i = 0; i < major->GetDisciplinesVector(year).Size(); i++)
+	{
+		disciplines.PushBack(major->GetDisciplinesVector(year)[i]);
+		if (major->GetDisciplinesVector(year)[i]->GetType = Type::mandatory)
+			grades.PushBack(1);
+		else
+			grades.PushBack(0);
+	}
+}
+void Student::ChandeGroup(unsigned int group)
+{
+	if (this->status == Status::dropout || this->status == Status::graduated)
+	{
+		throw "This student is graduated or droppout!";
+	}
+	this->group = group;
+}
+void Student::ChangeYear(unsigned int year)
+{
+	if (this->status == Status::dropout || this->status == Status::graduated)
+	{
+		throw "This student is graduated or droppout!";
+	}
+	int count = 0;
+	if (this->year+1==year)
+	{
+		for (int i = 0; i < disciplines.Size(); i++)
+		{
+			if (grades[i] >= 1 && grades[i] < 3)
+			{
+				count++;
+			}
+		}
+		if (count>2)
+		{
+			throw "Тhe action cannot be performed.";
+		}
+	}
+	for (int i = 0; i < major->GetDisciplinesVector(year).Size(); i++)
+	{
+		this->disciplines.PushBack(major->GetDisciplinesVector(year)[i]);
+		if (major->GetDisciplinesVector(year)[i]->GetType==Type::mandatory)
+		{
+			grades.PushBack(1);//zaduljitelni zapisani
+		}
+		else
+		{
+			grades.PushBack(0);//optionalni i nezapisani
+		}
+	}
 }
